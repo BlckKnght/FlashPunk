@@ -332,7 +332,7 @@
 		 * @param	color		Color of the hitbox.
 		 * @param	alpha		Alpha of the hitbox.
 		 */
-		public static function hitbox(e:Entity, outline:Boolean = true, color:uint = 0xFFFFFF, alpha:Number = 1):void
+		/*public static function hitbox(e:Entity, outline:Boolean = true, color:uint = 0xFFFFFF, alpha:Number = 1):void
 		{
 			if (outline)
 			{
@@ -369,7 +369,7 @@
 			_graphics.beginFill(color, alpha);
 			_graphics.drawRect(e.x - e.originX - _camera.x, e.y - e.originY - _camera.y, e.width, e.height);
 			_target.draw(FP.sprite, null, null, blend);
-		}
+		}*/
 		
 		/**
 		 * Draws a quadratic curve.

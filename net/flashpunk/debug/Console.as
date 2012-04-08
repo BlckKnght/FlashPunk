@@ -299,7 +299,7 @@ package net.flashpunk.debug
 					{
 						// Update info while the game runs.
 						updateEntityLists(FP.world.count != ENTITY_LIST.length);
-						renderEntities();
+						//renderEntities();
 						updateFPSRead();
 						updateEntityCount();
 					}
@@ -379,7 +379,7 @@ package net.flashpunk.debug
 			// Update console state.
 			if (value) updateEntityLists();
 			else updateLog();
-			renderEntities();
+			//renderEntities();
 		}
 		
 		/** @private Steps the frame ahead. */
@@ -389,7 +389,7 @@ package net.flashpunk.debug
 			FP.engine.render();
 			updateEntityCount();
 			updateEntityLists();
-			renderEntities();
+			//renderEntities();
 		}
 		
 		/** @private Starts Entity dragging. */
@@ -418,7 +418,7 @@ package net.flashpunk.debug
 				e.y += yDelta;
 			}
 			FP.engine.render();
-			renderEntities();
+			//renderEntities();
 			updateEntityLists(true);
 		}
 		
@@ -446,7 +446,7 @@ package net.flashpunk.debug
 			FP.camera.y += yDelta;
 			FP.engine.render();
 			updateEntityLists(true);
-			renderEntities();
+			//renderEntities();
 		}
 		
 		/** @private Sets the camera position. */
@@ -456,7 +456,7 @@ package net.flashpunk.debug
 			FP.camera.y = y;
 			FP.engine.render();
 			updateEntityLists(true);
-			renderEntities();
+			//renderEntities();
 		}
 		
 		/** @private Starts Entity selection. */
@@ -477,7 +477,7 @@ package net.flashpunk.debug
 			if (Input.mouseReleased)
 			{
 				selectEntities(_entRect);
-				renderEntities();
+				//renderEntities();
 				_selecting = false;
 				_entSelect.graphics.clear();
 			}
@@ -533,7 +533,7 @@ package net.flashpunk.debug
 		{
 			SELECT_LIST.length = 0;
 			for each (var e:Entity in SCREEN_LIST) SELECT_LIST.push(e);
-			renderEntities();
+			//renderEntities();
 		}
 		
 		/** @private Starts log text scrolling. */
@@ -580,13 +580,13 @@ package net.flashpunk.debug
 			SCREEN_LIST.length = 0;
 			for each (var e:Entity in ENTITY_LIST)
 			{
-				if (e.collideRect(e.x, e.y, FP.camera.x, FP.camera.y, FP.width, FP.height))
+				//if (e.collideRect(e.x, e.y, FP.camera.x, FP.camera.y, FP.width, FP.height))
 					SCREEN_LIST.push(e);
 			}
 		}
 		
 		/** @private Renders the Entities positions and hitboxes. */
-		private function renderEntities():void
+		/*private function renderEntities():void
 		{
 			// If debug mode is on.
 			_entScreen.visible = _debug;
@@ -625,7 +625,7 @@ package net.flashpunk.debug
 					}
 				}
 			}
-		}
+		}*/
 		
 		/** @private Updates the log window. */
 		private function updateLog():void
@@ -789,7 +789,7 @@ package net.flashpunk.debug
 				if (Input.mousePressed)
 				{
 					FP.engine.paused = !FP.engine.paused;
-					renderEntities();
+					//renderEntities();
 				}
 			}
 			else _butPlay.alpha = _butPause.alpha = .5;

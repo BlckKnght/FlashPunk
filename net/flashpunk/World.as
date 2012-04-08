@@ -206,10 +206,9 @@
 		 * @param	y		Y position of the Entity.
 		 * @return	The Entity that was added.
 		 */
-		public function addMask(mask:Mask, type:String, x:int = 0, y:int = 0):Entity
+		public function addMask(mask:Mask, x:int = 0, y:int = 0):Entity
 		{
 			var e:Entity = new Entity(x, y, null, mask);
-			if (type) e.type = type;
 			e.active = e.visible = false;
 			return add(e);
 		}
@@ -373,6 +372,210 @@
 		}
 		
 		/**
+		 * Find the first Mask that collides with a provided Mask.
+		 * @param	types	A String, or Array or Vector of Strings specifying the types of Masks to test against.
+		 * @param	mask	The mask to test with.
+		 * @return	The first mask collided, or null if there are no collisions.
+		 */
+		public function collideMask(types:Object, mask:Mask):Mask
+		{
+			var m:Mask;
+			
+			var s:String = types as String;
+			var a:Array = types as Array;
+			var v:Vector.<String> = types as Vector.<String>;
+			
+			if (s)
+			{
+				m = _typeFirst[s];
+				while (m)
+				{
+					if (m.parent != mask.parent && mask.check(m))
+						return m;
+					m = m._typeNext;
+				}
+			}
+			else if (a)
+			{
+				for each (s in a)
+				{
+					m = _typeFirst[s];
+					while (m)
+					{
+						if (m.parent != mask.parent && mask.check(m))
+							return m;
+						m = m._typeNext;
+					}
+				}
+			}
+			else if (v)
+			{
+				for each (s in v)
+				{
+					m = _typeFirst[s]
+					while (m)
+					{
+						if (m.parent != mask.parent && mask.check(m))
+							return m;
+						m = m._typeNext;
+					}
+				}
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Populate an array with all Masks a provided Mask collides with.
+		 * @param	types	A String, or Array or Vector of Strings specifying the types of Masks to test against.
+		 * @param	mask	The mask to test with.
+		 * @param	into	An Array or Vector to be populated
+		 */
+		public function collideMaskInto(types:Object, mask:Mask, into:Object):void
+		{
+			if (!(into is Array || into is Vector.<*>)) return;
+			
+			var m:Mask;
+			
+			var s:String = types as String;
+			var a:Array = types as Array;
+			var v:Vector.<String> = types as Vector.<String>;
+			
+			if (s)
+			{
+				m = _typeFirst[s];
+				while (m)
+				{
+					if (m.parent != mask.parent && mask.check(m))
+						into[into.length] = m;
+					m = m._typeNext;
+				}
+			}
+			else if (a)
+			{
+				for each (s in a)
+				{
+					m = _typeFirst[s];
+					while (m)
+					{
+						if (m.parent != mask.parent && mask.check(m))
+							into[into.length] = m;
+						m = m._typeNext;
+					}
+				}
+			}
+			else if (v)
+			{
+				for each (s in v)
+				{
+					m = _typeFirst[s]
+					while (m)
+					{
+						if (m.parent != mask.parent && mask.check(m))
+							into[into.length] = m;
+						m = m._typeNext;
+					}
+				}
+			}
+		}
+		
+		public function collideEntity(types:Object, entity:Entity, entityTypes:Object = null):Mask
+		{
+			var m:Mask;
+			
+			var s:String = types as String;
+			var a:Array = types as Array;
+			var v:Vector.<String> = types as Vector.<String>;
+			
+			if (s)
+			{
+				m = _typeFirst[s];
+				while (m)
+				{
+					if (m.parent != entity && entity.check(m, entityTypes))
+						return m;
+					m = m._typeNext;
+				}
+			}
+			else if (a)
+			{
+				for each (s in a)
+				{
+					m = _typeFirst[s];
+					while (m)
+					{
+						if (m.parent != entity && entity.check(m, entityTypes))
+							return m;
+						m = m._typeNext;
+					}
+				}
+			}
+			else if (v)
+			{
+				for each (s in v)
+				{
+					m = _typeFirst[s]
+					while (m)
+					{
+						if (m.parent != entity && entity.check(m, entityTypes))
+							return m;
+						m = m._typeNext;
+					}
+				}
+			}
+			
+			return null;
+		}
+		
+		public function collideEntityInto(types:Object, entity:Entity, into:Object, entityTypes:Object = null):void
+		{
+			if (!(into is Array || into is Vector.<*>)) return;
+			
+			var m:Mask;
+			
+			var s:String = types as String;
+			var a:Array = types as Array;
+			var v:Vector.<String> = types as Vector.<String>;
+			
+			if (s)
+			{
+				m = _typeFirst[s];
+				while (m)
+				{
+					if (entity.check(m, entityTypes))
+						into[into.length] = m;
+					m = m._typeNext;
+				}
+			}
+			else if (a)
+			{
+				for each (s in a)
+				{
+					m = _typeFirst[s];
+					while (m)
+					{
+						if (entity.check(m, entityTypes))
+							into[into.length] = m;
+						m = m._typeNext;
+					}
+				}
+			}
+			else if (v)
+			{
+				for each (s in v)
+				{
+					m = _typeFirst[s]
+					while (m)
+					{
+						if (entity.check(m, entityTypes))
+							into[into.length] = m;
+						m = m._typeNext;
+					}
+				}
+			}
+		}
+		
+		/**
 		 * Returns the first Entity that collides with the rectangular area.
 		 * @param	type		The Entity type to check for.
 		 * @param	rX			X position of the rectangle.
@@ -381,13 +584,13 @@
 		 * @param	rHeight		Height of the rectangle.
 		 * @return	The first Entity to collide, or null if none collide.
 		 */
-		public function collideRect(type:String, rX:Number, rY:Number, rWidth:Number, rHeight:Number):Entity
+		public function collideRect(type:String, rX:Number, rY:Number, rWidth:Number, rHeight:Number):Mask
 		{
-			var e:Entity = _typeFirst[type];
-			while (e)
+			var m:Mask = _typeFirst[type];
+			while (m)
 			{
-				if (e.collideRect(e.x, e.y, rX, rY, rWidth, rHeight)) return e;
-				e = e._typeNext;
+				if (m.checkRect(rX, rY, rWidth, rHeight)) return m;
+				m = m._typeNext;
 			}
 			return null;
 		}
@@ -399,13 +602,13 @@
 		 * @param	pY			Y position.
 		 * @return	The collided Entity, or null if none collide.
 		 */
-		public function collidePoint(type:String, pX:Number, pY:Number):Entity
+		public function collidePoint(type:String, pX:Number, pY:Number):Mask
 		{
-			var e:Entity = _typeFirst[type];
-			while (e)
+			var m:Mask = _typeFirst[type];
+			while (m)
 			{
-				if (e.collidePoint(e.x, e.y, pX, pY)) return e;
-				e = e._typeNext;
+				if (m.checkPoint(pX, pY)) return m;
+				m = m._typeNext;
 			}
 			return null;
 		}
@@ -421,7 +624,7 @@
 		 * @param	p
 		 * @return
 		 */
-		public function collideLine(type:String, fromX:int, fromY:int, toX:int, toY:int, precision:uint = 1, p:Point = null):Entity
+		public function collideLine(type:String, fromX:int, fromY:int, toX:int, toY:int, precision:uint = 1, p:Point = null):Mask
 		{
 			// If the distance is less than precision, do the short sweep.
 			if (precision < 1) precision = 1;
@@ -444,7 +647,7 @@
 				yDelta:int = Math.abs(toY - fromY),
 				xSign:Number = toX > fromX ? precision : -precision,
 				ySign:Number = toY > fromY ? precision : -precision,
-				x:Number = fromX, y:Number = fromY, e:Entity;
+				x:Number = fromX, y:Number = fromY, m:Mask;
 			
 			// Do a raycast from the start to the end point.
 			if (xDelta > yDelta)
@@ -454,13 +657,13 @@
 				{
 					while (x < toX)
 					{
-						if ((e = collidePoint(type, x, y)))
+						if ((m = collidePoint(type, x, y)))
 						{
-							if (!p) return e;
+							if (!p) return m;
 							if (precision < 2)
 							{
 								p.x = x - xSign; p.y = y - ySign;
-								return e;
+								return m;
 							}
 							return collideLine(type, x - xSign, y - ySign, toX, toY, 1, p);
 						}
@@ -471,13 +674,13 @@
 				{
 					while (x > toX)
 					{
-						if ((e = collidePoint(type, x, y)))
+						if ((m = collidePoint(type, x, y)))
 						{
-							if (!p) return e;
+							if (!p) return m;
 							if (precision < 2)
 							{
 								p.x = x - xSign; p.y = y - ySign;
-								return e;
+								return m;
 							}
 							return collideLine(type, x - xSign, y - ySign, toX, toY, 1, p);
 						}
@@ -492,13 +695,13 @@
 				{
 					while (y < toY)
 					{
-						if ((e = collidePoint(type, x, y)))
+						if ((m = collidePoint(type, x, y)))
 						{
-							if (!p) return e;
+							if (!p) return m;
 							if (precision < 2)
 							{
 								p.x = x - xSign; p.y = y - ySign;
-								return e;
+								return m;
 							}
 							return collideLine(type, x - xSign, y - ySign, toX, toY, 1, p);
 						}
@@ -509,13 +712,13 @@
 				{
 					while (y > toY)
 					{
-						if ((e = collidePoint(type, x, y)))
+						if ((m = collidePoint(type, x, y)))
 						{
-							if (!p) return e;
+							if (!p) return m;
 							if (precision < 2)
 							{
 								p.x = x - xSign; p.y = y - ySign;
-								return e;
+								return m;
 							}
 							return collideLine(type, x - xSign, y - ySign, toX, toY, 1, p);
 						}
@@ -554,12 +757,12 @@
 		{
 			if (into is Array || into is Vector.<*>)
 			{
-				var e:Entity = _typeFirst[type],
+				var m:Mask = _typeFirst[type],
 					n:uint = into.length;
-				while (e)
+				while (m)
 				{
-					if (e.collideRect(e.x, e.y, rX, rY, rWidth, rHeight)) into[n ++] = e;
-					e = e._typeNext;
+					if (m.checkRect(rX, rY, rWidth, rHeight)) into[n ++] = m;
+					m = m._typeNext;
 				}
 			}
 		}
@@ -577,12 +780,12 @@
 		{
 			if (into is Array || into is Vector.<*>)
 			{
-				var e:Entity = _typeFirst[type],
+				var m:Mask = _typeFirst[type],
 					n:uint = into.length;
-				while (e)
+				while (m)
 				{
-					if (e.collidePoint(e.x, e.y, pX, pY)) into[n ++] = e;
-					e = e._typeNext;
+					if (m.checkPoint(pX, pY)) into[n ++] = m;
+					m = m._typeNext;
 				}
 			}
 		}
@@ -597,7 +800,7 @@
 		 * @param	ignore		Ignore this entity.
 		 * @return	The nearest Entity to the rectangle.
 		 */
-		public function nearestToRect(type:String, x:Number, y:Number, width:Number, height:Number, ignore:Entity = null):Entity
+		/*public function nearestToRect(type:String, x:Number, y:Number, width:Number, height:Number, ignore:Entity = null):Entity
 		{
 			var n:Entity = _typeFirst[type],
 				nearDist:Number = Number.MAX_VALUE,
@@ -615,7 +818,7 @@
 				n = n._typeNext;
 			}
 			return near;
-		}
+		}*/
 		
 		/**
 		 * Finds the Entity nearest to another.
@@ -624,7 +827,7 @@
 		 * @param	useHitboxes	If the Entities' hitboxes should be used to determine the distance. If false, their x/y coordinates are used.
 		 * @return	The nearest Entity to e.
 		 */
-		public function nearestToEntity(type:String, e:Entity, useHitboxes:Boolean = false):Entity
+		/*public function nearestToEntity(type:String, e:Entity, useHitboxes:Boolean = false):Entity
 		{
 			if (useHitboxes) return nearestToRect(type, e.x - e.originX, e.y - e.originY, e.width, e.height);
 			var n:Entity = _typeFirst[type],
@@ -646,7 +849,7 @@
 				n = n._typeNext;
 			}
 			return near;
-		}
+		}*/
 		
 		/**
 		 * Finds the Entity nearest to the position.
@@ -656,7 +859,7 @@
 		 * @param	useHitboxes	If the Entities' hitboxes should be used to determine the distance. If false, their x/y coordinates are used.
 		 * @return	The nearest Entity to the position.
 		 */
-		public function nearestToPoint(type:String, x:Number, y:Number, useHitboxes:Boolean = false):Entity
+		/*public function nearestToPoint(type:String, x:Number, y:Number, useHitboxes:Boolean = false):Entity
 		{
 			var n:Entity = _typeFirst[type],
 				nearDist:Number = Number.MAX_VALUE,
@@ -686,7 +889,7 @@
 				n = n._typeNext;
 			}
 			return near;
-		}
+		}*/
 		
 		/**
 		 * How many Entities are in the World.
@@ -839,12 +1042,12 @@
 		{
 			if (into is Array || into is Vector.<*>)
 			{
-				var e:Entity = _typeFirst[type],
+				var m:Mask = _typeFirst[type],
 					n:uint = into.length;
-				while (e)
+				while (m)
 				{
-					into[n ++] = e;
-					e = e._typeNext;
+					into[n ++] = m;
+					m = m._typeNext;
 				}
 			}
 		}
@@ -924,6 +1127,7 @@
 		public function updateLists():void
 		{
 			var e:Entity;
+			var m:Mask;
 			
 			// remove entities
 			if (_remove.length)
@@ -945,7 +1149,10 @@
 					
 					removeUpdate(e);
 					removeRender(e);
-					if (e._type) removeType(e);
+					for (m = e.maskFirst; m; m = m._siblingNext)
+					{
+						removeType(m);
+					}
 					if (e._name) unregisterName(e);
 					if (e.autoClear && e._tween) e.clearTweens();
 				}
@@ -962,7 +1169,7 @@
 					
 					addUpdate(e);
 					addRender(e);
-					if (e._type) addType(e);
+					for (m = e.maskFirst; m; m = m._siblingNext) addType(m);
 					if (e._name) registerName(e);
 					
 					e._world = this;
@@ -1072,34 +1279,34 @@
 			e._renderNext = e._renderPrev = null;
 		}
 		
-		/** @private Adds Entity to the type list. */
-		internal function addType(e:Entity):void
+		/** @private Adds Mask to the type list. */
+		internal function addType(m:Mask):void
 		{
 			// add to type list
-			if (_typeFirst[e._type])
+			if (_typeFirst[m._type])
 			{
-				_typeFirst[e._type]._typePrev = e;
-				e._typeNext = _typeFirst[e._type];
-				_typeCount[e._type] ++;
+				_typeFirst[m._type]._typePrev = m;
+				m._typeNext = _typeFirst[m._type];
+				_typeCount[m._type] ++;
 			}
 			else
 			{
-				e._typeNext = null;
-				_typeCount[e._type] = 1;
+				m._typeNext = null;
+				_typeCount[m._type] = 1;
 			}
-			e._typePrev = null;
-			_typeFirst[e._type] = e;
+			m._typePrev = null;
+			_typeFirst[m._type] = m;
 		}
 		
-		/** @private Removes Entity from the type list. */
-		internal function removeType(e:Entity):void
+		/** @private Removes Mask from the type list. */
+		internal function removeType(m:Mask):void
 		{
 			// remove from the type list
-			if (_typeFirst[e._type] == e) _typeFirst[e._type] = e._typeNext;
-			if (e._typeNext) e._typeNext._typePrev = e._typePrev;
-			if (e._typePrev) e._typePrev._typeNext = e._typeNext;
-			e._typeNext = e._typePrev = null;
-			_typeCount[e._type] --;
+			if (_typeFirst[m._type] == m) _typeFirst[m._type] = m._typeNext;
+			if (m._typeNext) m._typeNext._typePrev = m._typePrev;
+			if (m._typePrev) m._typePrev._typeNext = m._typeNext;
+			m._typeNext = m._typePrev = null;
+			_typeCount[m._type] --;
 		}
 		
 		/** @private Register's the Entity's instance name. */

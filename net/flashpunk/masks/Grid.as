@@ -35,16 +35,15 @@
 			_rows = height / tileHeight;
 			_data = new BitmapData(_columns, _rows, true, 0);
 			_tile = new Rectangle(0, 0, tileWidth, tileHeight);
-			_x = x;
-			_y = y;
-			_width = width;
-			_height = height;
+			this.x = x;
+			this.y = y;
+			this.width = width;
+			this.height = height;
 			
 			// set callback functions
-			_check[Mask] = collideMask;
-			_check[Hitbox] = collideHitbox;
-			_check[Pixelmask] = collidePixelmask;
-			_check[Grid] = collideGrid;
+			_check[Hitbox] = checkGridHitbox;
+			_check[Pixelmask] = checkGridPixelmask;
+			_check[Grid] = checkGridGrid;
 		}
 		
 		/**
@@ -195,13 +194,25 @@
 		 */
 		public function get data():BitmapData { return _data; }
 		
-		/** @private Collides against an Entity. */
-		private function collideMask(other:Mask):Boolean
+		// TODO: checkPoint and checkRect
+		
+		// TODO: update all checks to allow unparented masks to collide without errors
+		override public function check(other:Mask):Boolean
 		{
-			_rect.x = other.parent.x - other.parent.originX - parent.x + parent.originX;
-			_rect.y = other.parent.y - other.parent.originY - parent.y + parent.originY;
-			_point.x = int((_rect.x + other.parent.width - 1) / _tile.width) + 1;
-			_point.y = int((_rect.y + other.parent.height -1) / _tile.height) + 1;
+			if (!parent)
+				return false;
+			else
+				return super.check(other);
+		}
+		
+		/** Collides against a Hitbox. */
+		protected function checkGridHitbox(other:Hitbox):Boolean
+		{
+			if (!checkHitboxHitbox(other)) return false;
+			_rect.x = other.parent.x + other.x - parent.x - x;
+			_rect.y = other.parent.y + other.y - parent.y - y;
+			_point.x = int((_rect.x + other.width - 1) / _tile.width) + 1;
+			_point.y = int((_rect.y + other.height -1) / _tile.height) + 1;
 			_rect.x = int(_rect.x / _tile.width);
 			_rect.y = int(_rect.y / _tile.height);
 			_rect.width = _point.x - _rect.x;
@@ -209,27 +220,14 @@
 			return _data.hitTest(FP.zero, 1, _rect);
 		}
 		
-		/** @private Collides against a Hitbox. */
-		private function collideHitbox(other:Hitbox):Boolean
+		/** Collides against a Pixelmask. */
+		protected function checkGridPixelmask(other:Pixelmask):Boolean
 		{
-			_rect.x = other.parent.x + other._x - parent.x - _x;
-			_rect.y = other.parent.y + other._y - parent.y - _y;
-			_point.x = int((_rect.x + other._width - 1) / _tile.width) + 1;
-			_point.y = int((_rect.y + other._height -1) / _tile.height) + 1;
-			_rect.x = int(_rect.x / _tile.width);
-			_rect.y = int(_rect.y / _tile.height);
-			_rect.width = _point.x - _rect.x;
-			_rect.height = _point.y - _rect.y;
-			return _data.hitTest(FP.zero, 1, _rect);
-		}
-		
-		/** @private Collides against a Pixelmask. */
-		private function collidePixelmask(other:Pixelmask):Boolean
-		{
-			var x1:int = other.parent.x + other._x - parent.x - _x,
-				y1:int = other.parent.y + other._y - parent.y - _y,
-				x2:int = ((x1 + other._width - 1) / _tile.width),
-				y2:int = ((y1 + other._height - 1) / _tile.height);
+			if (!checkHitboxHitbox(other)) return false;
+			var x1:int = other.parent.x + other.x - parent.x - x,
+				y1:int = other.parent.y + other.y - parent.y - y,
+				x2:int = ((x1 + other.width - 1) / _tile.width),
+				y2:int = ((y1 + other.height - 1) / _tile.height);
 			_point.x = x1;
 			_point.y = y1;
 			x1 /= _tile.width;
@@ -243,7 +241,7 @@
 				{
 					if (_data.getPixel32(x1, y1))
 					{
-						if (other._data.hitTest(_point, 1, _tile)) return true;
+						if (other.data.hitTest(_point, 1, _tile)) return true;
 					}
 					x1 ++;
 					_tile.x += _tile.width;
@@ -256,21 +254,22 @@
 			return false;
 		}
 		
-		/** @private Collides against a Grid. */
-		private function collideGrid(other:Grid):Boolean
+		/** Collides against a Grid. */
+		protected function checkGridGrid(other:Grid):Boolean
 		{
+			if (!super.checkHitboxHitbox(other) return false;
 			// Find the X edges
-			var ax1:Number = parent.x + _x;
-			var ax2:Number = ax1 + _width;
-			var bx1:Number = other.parent.x + other._x;
-			var bx2:Number = bx1 + other._width;
+			var ax1:Number = parent.x + x;
+			var ax2:Number = ax1 + width;
+			var bx1:Number = other.parent.x + other.x;
+			var bx2:Number = bx1 + other.width;
 			if (ax2 < bx1 || ax1 > bx2) return false;
 			
 			// Find the Y edges
-			var ay1:Number = parent.y + _y;
-			var ay2:Number = ay1 + _height;
-			var by1:Number = other.parent.y + other._y;
-			var by2:Number = by1 + other._height;
+			var ay1:Number = parent.y + y;
+			var ay2:Number = ay1 + height;
+			var by1:Number = other.parent.y + other.y;
+			var by2:Number = by1 + other.height;
 			if (ay2 < by1 || ay1 > by2) return false;
 			
 			// Find the overlapping area
@@ -286,47 +285,47 @@
 			if (_tile.width < other._tile.width)
 			{
 				tw = _tile.width;
-				ox1 -= parent.x + _x;
+				ox1 -= parent.x + x;
 				ox1 = int(ox1 / tw) * tw;
-				ox1 += parent.x + _x;
+				ox1 += parent.x + x;
 			}
 			else
 			{
 				tw = other._tile.width;
-				ox1 -= other.parent.x + other._x;
+				ox1 -= other.parent.x + other.x;
 				ox1 = int(ox1 / tw) * tw;
-				ox1 += other.parent.x + other._x;
+				ox1 += other.parent.x + other.x;
 			}
 			if (_tile.height < other._tile.height)
 			{
 				th = _tile.height;
-				oy1 -= parent.y + _y;
+				oy1 -= parent.y + y;
 				oy1 = int(oy1 / th) * th;
-				oy1 += parent.y + _y;
+				oy1 += parent.y + y;
 			}
 			else
 			{
 				th = other._tile.height;
-				oy1 -= other.parent.y + other._y;
+				oy1 -= other.parent.y + other.y;
 				oy1 = int(oy1 / th) * th;
-				oy1 += other.parent.y + other._y;
+				oy1 += other.parent.y + other.y;
 			}
 			
 			// Step through the overlapping rectangle
-			for (var y:Number = oy1; y < oy2; y += th)
+			for (var yy:Number = oy1; yy < oy2; yy += th)
 			{
 				// Get the row indices for the top and bottom edges of the tile
-				var ar1:int = (y - parent.y - _y) / _tile.height;
-				var br1:int = (y - other.parent.y - other._y) / other._tile.height;
-				var ar2:int = ((y - parent.y - _y) + (th - 1)) / _tile.height;
-				var br2:int = ((y - other.parent.y - other._y) + (th - 1)) / other._tile.height;
-				for (var x:Number = ox1; x < ox2; x += tw)
+				var ar1:int = (yy - parent.y - yy) / _tile.height;
+				var br1:int = (yy - other.parent.y - other.y) / other._tile.height;
+				var ar2:int = ((yy - parent.y - yy) + (th - 1)) / _tile.height;
+				var br2:int = ((yy - other.parent.y - other.y) + (th - 1)) / other._tile.height;
+				for (var xx:Number = ox1; xx < ox2; xx += tw)
 				{
 					// Get the column indices for the left and right edges of the tile
-					var ac1:int = (x - parent.x - _x) / _tile.width;
-					var bc1:int = (x - other.parent.x - other._x) / other._tile.width;
-					var ac2:int = ((x - parent.x - _x) + (tw - 1)) / _tile.width;
-					var bc2:int = ((x - other.parent.x - other._x) + (tw - 1)) / other._tile.width;
+					var ac1:int = (xx - parent.x - x) / _tile.width;
+					var bc1:int = (xx - other.parent.x - other.x) / other._tile.width;
+					var ac2:int = ((xx - parent.x - x) + (tw - 1)) / _tile.width;
+					var bc2:int = ((xx - other.parent.x - other.x) + (tw - 1)) / other._tile.width;
 					
 					// Check all the corners for collisions
 					if ((_data.getPixel32(ac1, ar1) > 0 && other._data.getPixel32(bc1, br1) > 0)
@@ -347,17 +346,17 @@
 			var sx:Number = FP.screen.scaleX * FP.screen.scale;
 			var sy:Number = FP.screen.scaleY * FP.screen.scale;
 			
-			var x:int, y:int;
+			var xx:int, yy:int;
 			
 			g.lineStyle(1, 0xFFFFFF, 0.25);
 			
-			for (y = 0; y < _rows; y ++)
+			for (yy = 0; yy < _rows; yy ++)
 			{
-				for (x = 0; x < _columns; x ++)
+				for (x = 0; xx < _columns; xx ++)
 				{
-					if (_data.getPixel32(x, y))
+					if (_data.getPixel32(xx, yy))
 					{
-						g.drawRect((parent.x - parent.originX - FP.camera.x + x * _tile.width) * sx, (parent.y - parent.originY - FP.camera.y + y * _tile.height) * sy, _tile.width * sx, _tile.height * sy);
+						g.drawRect((parent.x + x - FP.camera.x + xx * _tile.width) * sx, (parent.y + y - FP.camera.y + yy * _tile.height) * sy, _tile.width * sx, _tile.height * sy);
 					}
 				}
 			}
